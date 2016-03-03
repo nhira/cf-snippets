@@ -6,9 +6,8 @@
 			"the corresponding Route Tables, InternetGateway, and Managed NAT Gateway.  It also adds the appropriate ",
 			"routes.  Finally, it creates a Windows Bastion Host.",
 			"Questions/Issues",
-			"1.  Do the private and public subnets need to be in the same AZ?",
-			"2.  Consider a mapping for the Bastion Host AMI.",
-			"3.  Consider creating multiple private subnets."],
+			"1.  Consider a Mapping for the Bastion Host AMI.",
+			"2.  Consider creating multiple private subnets."],
 		"AWS::CloudFormation::Designer": {
 			"87ee9a77-e3fd-4273-bb7e-1716acd729f9": {
 				"size": {
@@ -285,9 +284,6 @@
 					"Ref": "bastionHostKeyPair"
 				},
 				"InstanceType": "m3.medium",
-				"AvailabilityZone": {
-					"Fn::GetAtt": ["pubSubnet", "AvailabilityZone"]
-				},
 				"NetworkInterfaces": [{
 					"DeviceIndex": "0",
 					"AssociatePublicIpAddress": true,
@@ -298,32 +294,6 @@
 						"Ref": "pubSubnet"
 					}
 					}]
-			}
-		},
-		"bastionHostPrivateENI": {
-			"DependsOn": ["privSubnet", "bastionHost"],
-			"Type": "AWS::EC2::NetworkInterface",
-			"Properties": {
-				"Description": "Private subnet ENI for bastion host",
-				"GroupSet": [{
-					"Fn::GetAtt": ["bastionHostSG", "GroupId"]
-				}],
-				"SubnetId": {
-					"Ref": "privSubnet"
-				}
-			}
-		},
-		"attachPrivateENI": {
-			"DependsOn": "bastionHost",
-			"Type": "AWS::EC2::NetworkInterfaceAttachment",
-			"Properties": {
-				"InstanceId": {
-					"Ref": "bastionHost"
-				},
-				"NetworkInterfaceId": {
-					"Ref": "bastionHostPrivateENI"
-				},
-				"DeviceIndex": "1"
 			}
 		}
 	},
