@@ -125,11 +125,14 @@
 			}
 		},
 		"privSubnet": {
-			"DependsOn": ["dedicatedVPC"],
+			"DependsOn": ["dedicatedVPC", "pubSubnet"],
 			"Type": "AWS::EC2::Subnet",
 			"Properties": {
 				"VpcId": {
 					"Ref": "dedicatedVPC"
+				},
+				"AvailabilityZone": {
+					"Fn::GetAtt": ["pubSubnet", "AvailabilityZone"]
 				},
 				"MapPublicIpOnLaunch": false,
 				"CidrBlock": {
@@ -273,6 +276,30 @@
 				}]
 			}
 		},
+		"bastionHostAccessSG": {
+			"DependsOn": ["dedicatedVPC", "bastionHostSG"],
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "SG that permits RDP traffic from the Bastion Host",
+				"VpcId": {
+					"Ref": "dedicatedVPC"
+				},
+				"SecurityGroupIngress": [{
+					"IpProtocol": "tcp",
+					"FromPort": "3389",
+					"ToPort": "3389",
+					"SourceSecurityGroupId": {
+						"Ref": "bastionHostSG"
+					}
+		         }],
+				"SecurityGroupEgress": [{
+					"IpProtocol": "tcp",
+					"FromPort": "3389",
+					"ToPort": "3389",
+					"CidrIp": "0.0.0.0/0"
+				}]
+			}
+		},
 		"bastionHost": {
 			"DependsOn": ["attachIGW", "ngwRoute"],
 			"Type": "AWS::EC2::Instance",
@@ -338,6 +365,12 @@
 			"Description": "Public IP address assigned to new Bastion Host",
 			"Value": {
 				"Fn::GetAtt": ["bastionHost", "PublicIp"]
+			}
+		},
+		"bastionHostAccessSG": {
+			"Description": "Security Group that can be used to permit RDP traffic from the Bastion Host",
+			"Value": {
+				"Ref": "bastionHostAccessSG"
 			}
 		}
 	}
